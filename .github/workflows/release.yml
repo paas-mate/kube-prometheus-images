@@ -1,0 +1,86 @@
+name: Release
+
+on:
+  push:
+    branches:
+      - main
+
+permissions: write-all
+
+jobs:
+  save-image:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - name: Set up QEMU
+        uses: docker/setup-qemu-action@v2
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v2
+      - name: Log in to Docker Hub
+        uses: docker/login-action@v2
+        with:
+          username: ${{ secrets.DOCKER_USERNAME }}
+          password: ${{ secrets.DOCKER_PASSWORD }}
+      - name: Save k8s-prometheus-adapter
+        run: docker pull directxman12/k8s-prometheus-adapter:v0.8.4; docker save directxman12/k8s-prometheus-adapter:v0.8.4 -o k8s-prometheus-adapter.tar.gz
+      - name: Save configmap-reload
+        run: docker pull jimmidyson/configmap-reload:v0.5.0; docker save jimmidyson/configmap-reload:v0.5.0 -o configmap-reload.tar.gz
+      - name: Save kube-state-metrics
+        run: docker pull k8s.gcr.io/kube-state-metrics/kube-state-metrics:v2.0.0; docker save k8s.gcr.io/kube-state-metrics/kube-state-metrics:v2.0.0 -o kube-state-metrics.tar.gz
+      - name: Save kube-rbac-proxy
+        run: docker pull quay.io/brancz/kube-rbac-proxy:v0.8.0; docker save quay.io/brancz/kube-rbac-proxy:v0.8.0 -o kube-rbac-proxy.tar.gz
+      - name: Save blackbox-exporter
+        run: docker pull quay.io/prometheus/blackbox-exporter:v0.18.0; docker save quay.io/prometheus/blackbox-exporter:v0.18.0 -o blackbox-exporter.tar.gz
+      - name: Save prometheus-operator
+        run: docker pull quay.io/prometheus-operator/prometheus-operator:v0.47.0; docker save quay.io/prometheus-operator/prometheus-operator:v0.47.0 -o prometheus-operator.tar.gz
+      - name: Save alertmanager
+        run: docker pull quay.io/prometheus/alertmanager:v0.21.0; docker save quay.io/prometheus/alertmanager:v0.21.0 -o alertmanager.tar.gz
+      - name: Sava prometheus-config-reloader
+        run: docker pull quay.io/prometheus-operator/prometheus-config-reloader:v0.47.0; docker save quay.io/prometheus-operator/prometheus-config-reloader:v0.47.0 -o prometheus-config-reloader.tar.gz
+      - name: Save prometheus
+        run: docker pull quay.io/prometheus/prometheus:v2.26.0; docker save quay.io/prometheus/prometheus:v2.26.0 -o prometheus.tar.gz
+      - name: Save node-exporter
+        run: docker pull quay.io/prometheus/node-exporter:v1.1.2; docker save quay.io/prometheus/node-exporter:v1.1.2 -o node-exporter.tar.gz
+      - name: Save grafana
+        run: docker pull grafana/grafana:7.5.4; docker save grafana/grafana:7.5.4 -o grafana.tar.gz
+      - name: Save kube-prometheus-all-in-one
+        run: docker save -o kube-prometheus-all-in-one.tar.gz directxman12/k8s-prometheus-adapter:v0.8.4 jimmidyson/configmap-reload:v0.5.0 k8s.gcr.io/kube-state-metrics/kube-state-metrics:v2.0.0 quay.io/brancz/kube-rbac-proxy:v0.8.0 quay.io/prometheus/blackbox-exporter:v0.18.0 quay.io/prometheus-operator/prometheus-operator:v0.47.0 quay.io/prometheus/alertmanager:v0.21.0 quay.io/prometheus-operator/prometheus-config-reloader:v0.47.0 quay.io/prometheus/prometheus:v2.26.0 quay.io/prometheus/node-exporter:v1.1.2 grafana/grafana:7.5.4
+      - uses: dev-drprasad/delete-tag-and-release@v0.2.0
+        with:
+          delete_release: true
+          tag_name: v0.8.0
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Tag release
+        uses: tvdias/github-tagger@v0.0.2
+        with:
+          repo-token: ${{ secrets.GITHUB_TOKEN }}
+          tag: v0.8.0
+
+      # Creates the new release with the binary as a release asset.
+      # If the previous Action was skipped, then this keeps the same tag as the
+      # previous release.
+      - name: Create new release
+        uses: softprops/action-gh-release@v1
+        with:
+          body: "v0.8.0"
+          name: "v0.8.0"
+          tag_name: v0.8.0
+          files: |
+            k8s-prometheus-adapter.tar.gz
+            configmap-reload.tar.gz
+            kube-state-metrics.tar.gz
+            kube-rbac-proxy.tar.gz
+            blackbox-exporter.tar.gz
+            prometheus-operator.tar.gz
+            alertmanager.tar.gz
+            prometheus-config-reloader.tar.gz
+            prometheus.tar.gz
+            node-exporter.tar.gz
+            grafana.tar.gz
+            kube-prometheus-all-in-one.tar.gz
+          draft: false
+          prerelease: false
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
