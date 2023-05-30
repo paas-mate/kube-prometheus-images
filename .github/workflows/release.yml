@@ -45,7 +45,7 @@ jobs:
         run: docker pull grafana/grafana:7.5.4; docker save grafana/grafana:7.5.4 -o grafana.tar.gz
       - name: Save kube-prometheus-all-in-one
         run: docker save -o kube-prometheus-all-in-one.tar.gz directxman12/k8s-prometheus-adapter:v0.8.4 jimmidyson/configmap-reload:v0.5.0 k8s.gcr.io/kube-state-metrics/kube-state-metrics:v2.0.0 quay.io/brancz/kube-rbac-proxy:v0.8.0 quay.io/prometheus/blackbox-exporter:v0.18.0 quay.io/prometheus-operator/prometheus-operator:v0.47.0 quay.io/prometheus/alertmanager:v0.21.0 quay.io/prometheus-operator/prometheus-config-reloader:v0.47.0 quay.io/prometheus/prometheus:v2.26.0 quay.io/prometheus/node-exporter:v1.1.2 grafana/grafana:7.5.4
-      - uses: dev-drprasad/delete-tag-and-release@v0.2.0
+      - uses: dev-drprasad/delete-tag-and-release@v1.0.1
         with:
           delete_release: true
           tag_name: v0.8.0
